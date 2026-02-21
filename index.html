@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para mi tiquita monita</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:italic,wght@0,400;0,700&family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            cursor: crosshair; /* Cambia el cursor para indicar interacción */
+        }
+
+        /* Contenedor del Video Inicial */
+        #video-intro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Canvas para efectos de fondo */
+        #blackhole-canvas, #constellation-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            pointer-events: none; /* Para que no interfieran con el scroll o clicks */
+        }
+        
+        #blackhole-canvas {
+            filter: blur(1px);
+        }
+        
+        /* Efecto Tap Tap */
+        .tap-effect {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: tapAnim 1s ease-out forwards;
+            z-index: 9998;
+        }
+
+        @keyframes tapAnim {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0);
+            }
+            100% {
+                width: 150px;
+                height: 150px;
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.5);
+                box-shadow: 0 0 20px 10px rgba(255, 100, 150, 0.5);
+            }
+        }
+        
+        /* Pequeños corazones para el tap */
+        .heart-particle {
+            position: absolute;
+            color: #ff6496;
+            font-size: 20px;
+            pointer-events: none;
+            z-index: 9998;
+            animation: heartAnim 1s ease-out forwards;
+        }
+        
+        @keyframes heartAnim {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -150px) scale(1.2) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+
+        /* Contenido Principal */
+        #main-content {
+            opacity: 0;
+            transition: opacity 2s ease;
+            padding: 50px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 200vh; /* Para permitir scroll */
+            position: relative;
+            z-index: 1; /* Asegura que el texto esté sobre los canvas */
+        }
+
+        .section {
+            max-width: 600px;
+            margin: 80px 0;
+            text-align: center;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            transform: translateY(50px);
+            opacity: 0;
+            transition: all 1s ease-out;
+            background: rgba(0,0,0,0.3); /* Un poco de fondo para leer mejor */
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        .section.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            background: linear-gradient(to right, #fff, #d1b2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .highlight {
+            color: #d1b2ff;
+            font-weight: bold;
+        }
+
+        /* Efecto de resplandor para el agujero negro central */
+        .bh-center {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(0,0,0,1) 40%, rgba(50,20,100,0.3) 70%, transparent 100%);
+            z-index: -2; /* Detrás de los canvas de partículas */
+            border-radius: 50%;
+            box-shadow: 0 0 100px rgba(100, 50, 255, 0.2);
+        }
+
+        /* Botón para activar audio (por políticas de navegador) */
+        #start-btn {
+            position: absolute;
+            padding: 15px 30px;
+            background: none;
+            border: 1px solid white;
+            color: white;
+            cursor: pointer;
+            font-family: 'Montserrat';
+            letter-spacing: 2px;
+            z-index: 10000;
+            transition: all 0.3s ease;
+        }
+        
+        #start-btn:hover {
+            background: white;
+            color: black;
+            box-shadow: 0 0 20px white;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" src="a.mp3" loop></audio>
+
+    <div id="video-intro">
+        <button id="start-btn">ENTRAR A MI CORAZÓNCITO</button>
+        <video id="intro-video" style="display:none;">
+            <source src="marissa.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <canvas id="blackhole-canvas"></canvas>
+    <canvas id="constellation-canvas"></canvas>
+    <div class="bh-center"></div>
+
+    <div id="main-content">
+        <div class="section">
+            <h1>Mi amor...</h1>
+            <p>Te escribo esto porque neta quiero que estas palabras se te queden bien grabadas, especialmente para esos días en los que tu cabecita se pone a dar vueltas y te intenta decir cosas que no son. Primero que nada, quiero que sepas que <span class="highlight">te amo un chingo</span>, de una forma bien bonita y real. Aunque ahorita la distancia nos ponga retos, mi sentimiento por ti no cambia; al contrario, me hace valorar mucho más cada momento que compartimos.</p>
+        </div>
+
+        <div class="section">
+            <p>Quiero que estés bien tranquila, de corazón: no estoy enojado contigo, ni hay nadie más, ni tengo la más mínima intención de reemplazarte. Eres tú, y lo que hemos construido es único. Pero también, para que tu mente descanse, quiero recordarte que mi amor por ti es sano, yo te amo muchi, pero enserio <span class="highlight">no tengo una dependencia emocional hacia ti</span>; te elijo cada día porque quiero estar contigo, no porque 'necesite' que alguien me llene un vacío.</p>
+        </div>
+
+        <div class="section">
+            <p>Si alguna vez tu cabecita vuelve a pensar que dependo de ti, recuerda que lo nuestro es fuerte justamente porque somos dos personas completas que deciden elegirse dia a dia y caminar juntas en las malas y las buenas, y amorcito, neta, estamos bien, y me encanta cuando nos damos ese tiempo para platicar de todo, para demostrarnos amor y sentirnos cerquita a pesar de los kilómetros, esos detalles son los que nos mantienen firmes y nos ayudan a que todo fluya mucho mejor, amorcito!</p>
+        </div>
+
+        <div class="section">
+            <p>No es que algo esté mal. Descansa en esa seguridad: espero que podamos seguir cultivando lo nuestro, que me demuestres ese amor que me tienes porque me encanta sentirte cerca, aunque no estés aquí físicamente, yo aquí sigo, firme y amandote cada día más, así que saca de tu mente cualquier idea de inseguridad, porque <span class="highlight">mi lugar es contigo</span>.</p>
+        </div>
+
+        <div class="section">
+            <p style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.5rem;">La distancia no le llega ni a los talones a todo lo que siento por ti, estemos firmes, mi amor, yo no te cambio por nada.</p>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('intro-video');
+        const startBtn = document.getElementById('start-btn');
+        const introDiv = document.getElementById('video-intro');
+        const mainContent = document.getElementById('main-content');
+        const music = document.getElementById('bg-music');
+
+        // Al hacer click, inicia el video y el audio
+        startBtn.addEventListener('click', () => {
+            startBtn.style.display = 'none';
+            video.style.display = 'block';
+            video.play().catch(e => {
+                console.error("Error al reproducir video:", e);
+                // Si falla el video, saltamos directamente al contenido
+                video.onended();
+            });
+        });
+
+        // Cuando el video termina
+        video.onended = function() {
+            introDiv.style.transition = 'opacity 2s';
+            introDiv.style.opacity = '0';
+            setTimeout(() => {
+                introDiv.style.display = 'none';
+                mainContent.style.opacity = '1';
+                music.play().catch(e => console.log("Audio play failed:", e));
+                initBlackHole(); // Inicia el efecto del agujero negro
+                initConstellations(); // Inicia el efecto de constelaciones
+            }, 2000);
+        };
+
+        // Animación al hacer Scroll
+        const observerOptions = { threshold: 0.3 };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Efecto Agujero Negro (Canvas)
+        function initBlackHole() {
+            const canvas = document.getElementById('blackhole-canvas');
+            const ctx = canvas.getContext('2d');
+            let w, h, particles;
+
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.size = Math.random() * 1.5;
+                    this.speed = Math.random() * 0.4 + 0.1;
+                    this.angle = Math.atan2(this.y - h/2, this.x - w/2);
+                    this.dist = Math.sqrt((this.x - w/2)**2 + (this.y - h/2)**2);
+                }
+                update() {
+                    this.dist -= this.speed * (1500 / this.dist); // Se aceleran al centro
+                    this.angle += 0.003; 
+                    this.x = w/2 + Math.cos(this.angle) * this.dist;
+                    this.y = h/2 + Math.sin(this.angle) * this.dist;
+
+                    if (this.dist < 10) this.reset();
+                }
+                draw() {
+                    ctx.fillStyle = `rgba(200, 200, 255, ${Math.min(0.8, this.dist/600)})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            particles = Array.from({length: 200}, () => new Particle());
+
+            function animate() {
+                ctx.clearRect(0, 0, w, h);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+        
+        // Efecto Constelaciones (Canvas)
+        function initConstellations() {
+            const canvas = document.getElementById('constellation-canvas');
+            const ctx = canvas.getContext('2d');
+            let w, h, stars;
+            
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+            
+            class Star {
+                constructor() {
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.radius = Math.random() * 1.5;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if(this.x < 0 || this.x > w) this.vx *= -1;
+                    if(this.y < 0 || this.y > h) this.vy *= -1;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+                    ctx.fill();
+                }
+            }
+            
+            stars = Array.from({length: 100}, () => new Star());
+            
+            function animate() {
+                ctx.clearRect(0, 0, w, h);
+                
+                // Dibujar líneas entre estrellas cercanas
+                for(let i=0; i<stars.length; i++) {
+                    for(let j=i+1; j<stars.length; j++) {
+                        let dx = stars[i].x - stars[j].x;
+                        let dy = stars[i].y - stars[j].y;
+                        let dist = Math.sqrt(dx*dx + dy*dy);
+                        if(dist < 100) {
+                            ctx.beginPath();
+                            ctx.moveTo(stars[i].x, stars[i].y);
+                            ctx.lineTo(stars[j].x, stars[j].y);
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${1 - dist/100})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                
+                stars.forEach(s => {
+                    s.update();
+                    s.draw();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Efecto "Tap Tap"
+        document.addEventListener('click', (e) => {
+            // Efecto de onda
+            const tap = document.createElement('div');
+            tap.className = 'tap-effect';
+            tap.style.left = `${e.clientX}px`;
+            tap.style.top = `${e.clientY}px`;
+            document.body.appendChild(tap);
+            
+            // Efecto de corazones
+            for(let i=0; i<5; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart-particle';
+                heart.innerHTML = '❤';
+                heart.style.left = `${e.clientX}px`;
+                heart.style.top = `${e.clientY}px`;
+                // Variación aleatoria para cada corazón
+                const randomX = (Math.random() - 0.5) * 50;
+                const randomRot = (Math.random() - 0.5) * 30;
+                heart.style.setProperty('--tx', `${randomX}px`);
+                heart.style.setProperty('--tr', `${randomRot}deg`);
+                
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 1000);
+            }
+
+            tap.onanimationend = () => tap.remove();
+        });
+    </script>
+</body>
+</html>
